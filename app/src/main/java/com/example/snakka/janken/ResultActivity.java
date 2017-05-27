@@ -1,6 +1,8 @@
 package com.example.snakka.janken;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +13,7 @@ public class ResultActivity extends AppCompatActivity {
     final int JANKEN_GU = 0;
     final int JANKEN_CHOKI = 1;
     final int JANKEN_PA = 2;
+    int gameResult;
 
     private ImageView myHandImageView;
     private ImageView comHandImageView;
@@ -47,6 +50,7 @@ public class ResultActivity extends AppCompatActivity {
         int comHand = (int)(Math.random() * 3);
         drawHandView(myHand, comHand); //自分の手の画像を変更
 
+        saveData(myHand, comHand, gameResult);
     }
 
 
@@ -84,7 +88,7 @@ public class ResultActivity extends AppCompatActivity {
 
 
     private void judgeJanken(int myHand, int comHand){
-        int gameResult = (comHand - myHand + 3) % 3;
+        gameResult = (comHand - myHand + 3) % 3;
         switch(gameResult){
             case 0:
                 resultText.setText(R.string.result_draw);
@@ -96,6 +100,30 @@ public class ResultActivity extends AppCompatActivity {
                 resultText.setText(R.string.result_lose);
                 break;
         }
+    }
+
+    private void saveData(int myHand, int comHand, int gameResult){
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = pref.edit();
+
+        int gameCount = pref.getInt("GAME_COUNT", 0);
+        int winningStreakCount = pref.getInt("WINNING_STREAK_COUNT", 0);
+        int lastComHand = pref.getInt("LAST_COM_HAND", 0);
+        int lastGameResult = pref.getInt("GAME_RESULT", -1);
+
+        editor.putInt("GAME_COUNT", gameCount + 1);
+        if(lastGameResult == 2 && gameResult == 2){
+            editor.putInt("WINNING_STREAK_COUNT", winningStreakCount + 1);
+        }else{
+            editor.putInt("WINNING_STREAK_COUNT", 0);
+        }
+
+        editor.putInt("LAST_MY_HAND", myHand);
+        editor.putInt("LAST_COM_HAND", comHand);
+        editor.putInt("BEFORE_LAST_COM_HAND", lastComHand);
+        editor.putInt("GAME_RESULT", gameResult);
+
+        editor.commit();
     }
 
 }
